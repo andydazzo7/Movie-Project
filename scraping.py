@@ -91,12 +91,12 @@ titles = []
 prices = []
 RRGs= []
 amenitiesBig = []
-for m in movies:
-    title = m.find_element_by_class_name("dark")
+for i in range(2):
+    title = movies[i].find_element_by_class_name("dark")
     print(title.text)
-    RatingRuntimeGenre = m.find_element_by_class_name("fd-movie__rating-runtime")
+    RatingRuntimeGenre = movies[i].find_element_by_class_name("fd-movie__rating-runtime")
     print(RatingRuntimeGenre.text)
-    showtimes = m.find_elements_by_class_name("fd-movie__btn-list-item")
+    showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
     imdbScrape(title.text, showtimes)
     count = 0
     for s in showtimes:
@@ -166,7 +166,7 @@ data = {
 }
 df = pd.DataFrame(data)
 print df 
-df.to_csv("MovieProjectTest1.csv", sep='\t', encoding = 'utf-8')
+df.to_csv("MovieProjectTest1.csv", encoding = 'utf-8')
 
 
     
