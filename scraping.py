@@ -1,3 +1,4 @@
+from __future__ import division
 from selenium.webdriver import Chrome
 import pandas as pd
 from selenium.webdriver.common.keys import Keys
@@ -7,12 +8,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import time
 from selenium.webdriver.common.by import By
-
+import re
 earnings = []
 peopleInolved=[]
 ratings = []
 Productions = []
 releaseDates  = []
+percentsfull = []
 def imdbScrape(movie, showtimes):
     webdriver = "/Users/andydazzo/Desktop/chromedriver"
     driver2 = Chrome(webdriver)
@@ -21,6 +23,9 @@ def imdbScrape(movie, showtimes):
     print(movie)
     url = "https://www.imdb.com/find?q={}&ref_=nv_sr_sm".format(movie)
     driver2.get(url)
+    time.sleep(10)
+    #wait = WebDriverWait(driver2, 10)
+    #element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'result_text')))
     a = driver2.find_element_by_class_name('result_text')
     link = a.find_element_by_tag_name('a')
     main_window = driver2.current_window_handle
@@ -52,6 +57,7 @@ def imdbScrape(movie, showtimes):
     prodsBig = " "
     for d in details:
         try:
+            budgetcount = 0
             h4 = d.find_element_by_tag_name('h4')
             if(h4.text == 'Gross USA:'):
                 budget = d.text
@@ -73,7 +79,6 @@ def imdbScrape(movie, showtimes):
                     Productions.append(prodsBig)
         except:
             pass
-    driver2.close()
     driver2.switch_to_window(main_window)
     driver2.quit()
 
@@ -81,9 +86,8 @@ def imdbScrape(movie, showtimes):
 
 #add path for local machine
 webdriver = "/Users/andydazzo/Desktop/chromedriver"
-#print("hi")
 driver = Chrome(webdriver)
-url = "https://www.fandango.com/amc-mountainside-10-aaaug/theater-page?mode=general&q=07090&date=2019-12-27"
+url = "https://www.fandango.com/amc-kabuki-8-aadas/theater-page?date=2020-01-05"
 driver.get(url)
 movies = driver.find_elements_by_class_name('fd-movie')
 times = []
@@ -91,17 +95,19 @@ titles = []
 prices = []
 RRGs= []
 amenitiesBig = []
-for i in range(2):
-    title = movies[i].find_element_by_class_name("dark")
+timesTaken = []
+for m in movies:
+    title = m.find_element_by_class_name("dark")
     print(title.text)
-    RatingRuntimeGenre = movies[i].find_element_by_class_name("fd-movie__rating-runtime")
+    RatingRuntimeGenre = m.find_element_by_class_name("fd-movie__rating-runtime")
     print(RatingRuntimeGenre.text)
-    showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
+    showtimes = m.find_elements_by_class_name("fd-movie__btn-list-item")
     imdbScrape(title.text, showtimes)
     count = 0
     for s in showtimes:
         count = count + 1
         try:
+            timesTaken.append(time.strftime)
             titles.append(title.text + str(count))
             RRGs.append(RatingRuntimeGenre.text)
             showtime = s.find_element_by_tag_name('a')
@@ -119,38 +125,39 @@ for i in range(2):
             price = driver3.find_element_by_class_name('pricePerTicket')
             print(price.text)
             prices.append(price.text)
-            #select = Select(driver3.find_element_by_class_name('qtyDropDown'))
-            #select.select_by_visible_text('1')
-            #button = driver3.find_element_by_id('NewCustomerCheckoutButton')
-            ##button.click()
-            #seats = driver3.find_element_by_id('frmSeatPicker')
-            #print(seats.text)
-            #x = seats.find_element_by_id('seatPickerContainer')
-            #print(x)
-            #try:
-                #element = WebDriverWait(driver3, 10).until( EC.visibility_of_element_located(By.ID, 'A3'))
-            #finally:
-             #   driver3.quit()
-            
-            #openSeats = seats.find_element_by_class_name('standard availableSeat')      
-            #openCount = 0
-            #for x in openSeats:
-             #   openCount+=1
-            #closedSeats = driver3.find_elements_by_class_name('standard reservedSeat')
-            #closedCount = 0
-            #for x in closedSeats:
-             #   closedSeats+=1
+            select = Select(driver3.find_element_by_class_name('qtyDropDown'))
+            select.select_by_visible_text('1')
+            button = driver3.find_element_by_id('NewCustomerCheckoutButton')
+            button.click()
+            try:
+                seats = driver3.find_element_by_id('frmSeatPicker')
+                #print(seats.get_attribute('innerHTML'))
+                x = seats.find_element_by_id('svg-Layer_1')
+                #driver.execute_script('arguments[0].click();', x)
+                y = x.get_attribute('innerHTML')
+                openSeats= []
+                openSeats = re.findall('availableSeat', y)
+                closedSeats = re.findall('reservedSeat' , y)
+                totalSeats = len(openSeats) + len(closedSeats)
+                if(totalSeats == 0):
+                    percentsfull.append(0.0)
+                else:
+                    percentsfull.append(len(closedSeats) / totalSeats)
+            except:
+                percentsfull.append(0.0)
+            #print(len(closedSeats) / totalSeats)
+
+
             driver3.close()
-            #print("percent full " + str(openCount/closedCount))
            
             
             
         except:
-            #driver3.close()
+           # driver3.close()
             times.append(None)
             amenitiesBig.append(None)
             prices.append(None)
-
+            percentsfull.append(None)
             pass
         #driver.back()
 data = {
@@ -159,14 +166,15 @@ data = {
     'time': times,
     'amenities' : amenitiesBig,
     'price' :prices,
-    'earnings': earnings,
     'peopleInolved':  peopleInolved,
     'IMDB rating': ratings,
-    'Release Date': releaseDates
+    'Earnings': earnings,
+    'Release Date': releaseDates,
+    'percent full': percentsfull
 }
 df = pd.DataFrame(data)
 print df 
-df.to_csv("MovieProjectTest1.csv", encoding = 'utf-8')
+df.to_csv("MovieProjectTest5-SanFrancisco.csv", encoding = 'utf-8')
 
 
     
