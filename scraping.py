@@ -9,23 +9,31 @@ from selenium.webdriver.support.ui import WebDriverWait
 import time
 from selenium.webdriver.common.by import By
 import re
+from datetime import date
 earnings = []
 peopleInolved=[]
 ratings = []
 Productions = []
 releaseDates  = []
 percentsfull = []
+popularities = []
+metascores = []
+starpowers= [] 
+datesTaken = []
+moneyMissed = []
 def imdbScrape(movie, showtimes):
     webdriver = "/Users/andydazzo/Desktop/chromedriver"
     driver2 = Chrome(webdriver)
     movie = movie.replace("(2019)", " " )
     movie = movie.replace(" ", '+')
+    movie.replace(' & ',' and ' )
     print(movie)
     url = "https://www.imdb.com/find?q={}&ref_=nv_sr_sm".format(movie)
     driver2.get(url)
     time.sleep(10)
     #wait = WebDriverWait(driver2, 10)
-    #element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'result_text')))
+    #element = wait.until(EC.visibility_of_eleme
+    # nt_located((By.CLASS_NAME, 'result_text')))
     a = driver2.find_element_by_class_name('result_text')
     link = a.find_element_by_tag_name('a')
     main_window = driver2.current_window_handle
@@ -77,8 +85,57 @@ def imdbScrape(movie, showtimes):
                 for s in showtimes:
 
                     Productions.append(prodsBig)
+           
         except:
             pass
+    if( len(earnings) < len(releaseDates)):
+        for s in showtimes:
+            earnings.append(0)
+    barItems = driver2.find_elements_by_class_name('titleReviewBarItem')
+    for b in barItems: 
+        print b.text
+        bsmall = b.text
+        if(len(re.findall('Metascore', bsmall)) > 0):
+            metascore = re.sub('[^0-9]','', bsmall)
+            print('meta ' + metascore)
+            for s in showtimes: 
+                metascores.append(metascore)
+        elif(len(re.findall('Popularity', bsmall)) > 0):
+            if ('(') in bsmall:
+                Result = bsmall[:bsmall.find('(') + 1]
+                popRating = re.sub('[^0-9]','', Result)
+            else:
+                popRating = re.sub('[^0-9]','', bsmall)
+            print('pop:' + popRating)
+            for s in showtimes: 
+                popularities.append(popRating)
+    CastList = driver2.find_element_by_class_name('cast_list')
+    people = CastList.find_elements_by_class_name('primary_photo')
+    StarPower = 0
+    for i in range(5):
+        link = people[i]
+        link1 = link.find_element_by_tag_name('a').get_attribute('href')
+        webdriver = "/Users/andydazzo/Desktop/chromedriver"
+        driver5 = Chrome(webdriver)
+        driver5.get(link1)
+        try:
+            meter = driver5.find_element_by_id('meterHeaderBox')
+            rating = meter.find_element_by_tag_name('a').text
+        
+            if(rating == 'SEE RANK'):
+                rating = 10000
+            elif(rating == 'Top 5000'):
+                rating = 5000
+            elif(rating == 'Top 500'):
+                rating = 500
+            print(rating)
+            StarPower+= (int)(rating)
+        except:
+            StarPower += 20000
+        driver5.close()
+        #driver2.close()
+    for s in showtimes:
+        starpowers.append(StarPower)
     driver2.switch_to_window(main_window)
     driver2.quit()
 
@@ -87,7 +144,7 @@ def imdbScrape(movie, showtimes):
 #add path for local machine
 webdriver = "/Users/andydazzo/Desktop/chromedriver"
 driver = Chrome(webdriver)
-url = "https://www.fandango.com/amc-kabuki-8-aadas/theater-page?date=2020-01-05"
+url = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
 driver.get(url)
 movies = driver.find_elements_by_class_name('fd-movie')
 times = []
@@ -96,18 +153,23 @@ prices = []
 RRGs= []
 amenitiesBig = []
 timesTaken = []
-for m in movies:
-    title = m.find_element_by_class_name("dark")
+for i in range(8):
+    title = movies[i].find_element_by_class_name("dark")
     print(title.text)
-    RatingRuntimeGenre = m.find_element_by_class_name("fd-movie__rating-runtime")
+    RatingRuntimeGenre = movies[i].find_element_by_class_name("fd-movie__rating-runtime")
     print(RatingRuntimeGenre.text)
-    showtimes = m.find_elements_by_class_name("fd-movie__btn-list-item")
+    showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
     imdbScrape(title.text, showtimes)
     count = 0
     for s in showtimes:
         count = count + 1
         try:
-            timesTaken.append(time.strftime)
+            t = time.localtime()
+            current_time = time.strftime("%H:%M:%S", t)
+            d = date.today()
+            datesTaken.append(d)
+            print(current_time)
+            timesTaken.append(current_time)
             titles.append(title.text + str(count))
             RRGs.append(RatingRuntimeGenre.text)
             showtime = s.find_element_by_tag_name('a')
@@ -141,8 +203,11 @@ for m in movies:
                 totalSeats = len(openSeats) + len(closedSeats)
                 if(totalSeats == 0):
                     percentsfull.append(0.0)
+                    moneyMissed.append(0.0)
                 else:
                     percentsfull.append(len(closedSeats) / totalSeats)
+                    moneyMissed.append(prices[len(prices) -1 ] * openSeats)
+                    print('money missed ' + prices[len(prices) -1 ] * openSeats)
             except:
                 percentsfull.append(0.0)
             #print(len(closedSeats) / totalSeats)
@@ -158,6 +223,7 @@ for m in movies:
             amenitiesBig.append(None)
             prices.append(None)
             percentsfull.append(None)
+            moneyMissed.append(None)
             pass
         #driver.back()
 data = {
@@ -170,11 +236,15 @@ data = {
     'IMDB rating': ratings,
     'Earnings': earnings,
     'Release Date': releaseDates,
-    'percent full': percentsfull
+    'percent full': percentsfull,
+    'Star Power' : starpowers,
+    'Popularity': popularities,
+    'MetaCritic Score': metascores,
+    'Time Taken': timesTaken
 }
 df = pd.DataFrame(data)
 print df 
-df.to_csv("MovieProjectTest5-SanFrancisco.csv", encoding = 'utf-8')
+df.to_csv("MovieProjectTest10-ChicagoFull.csv", encoding = 'utf-8')
 
 
     
