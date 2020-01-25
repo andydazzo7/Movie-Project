@@ -21,6 +21,8 @@ metascores = []
 starpowers= [] 
 datesTaken = []
 moneyMissed = []
+opens = []
+closes = []
 def imdbScrape(movie, showtimes):
     webdriver = "/Users/andydazzo/Desktop/chromedriver"
     driver2 = Chrome(webdriver)
@@ -153,13 +155,13 @@ prices = []
 RRGs= []
 amenitiesBig = []
 timesTaken = []
-for i in range(8):
+for i in range(9):
     title = movies[i].find_element_by_class_name("dark")
     print(title.text)
     RatingRuntimeGenre = movies[i].find_element_by_class_name("fd-movie__rating-runtime")
     print(RatingRuntimeGenre.text)
     showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
-    imdbScrape(title.text, showtimes)
+    #imdbScrape(title.text, showtimes)
     count = 0
     for s in showtimes:
         count = count + 1
@@ -199,17 +201,25 @@ for i in range(8):
                 y = x.get_attribute('innerHTML')
                 openSeats= []
                 openSeats = re.findall('availableSeat', y)
+                opens.append(len(openSeats))
                 closedSeats = re.findall('reservedSeat' , y)
+                closes.append(len(closedSeats))
                 totalSeats = len(openSeats) + len(closedSeats)
                 if(totalSeats == 0):
                     percentsfull.append(0.0)
                     moneyMissed.append(0.0)
                 else:
                     percentsfull.append(len(closedSeats) / totalSeats)
-                    moneyMissed.append(prices[len(prices) -1 ] * openSeats)
-                    print('money missed ' + prices[len(prices) -1 ] * openSeats)
+                    price = prices[len(prices) -1]
+                    s = price.replace('$', '')
+                    s1 = float(s)
+                    moneyMissed.append(s1 * len(openSeats))
+                    print('money missed ' + str((s1 * len(openSeats))))
             except:
                 percentsfull.append(0.0)
+                opens.append(0.0)
+                closes.append(0.0)
+                moneyMissed.append(0.0)
             #print(len(closedSeats) / totalSeats)
 
 
@@ -224,27 +234,32 @@ for i in range(8):
             prices.append(None)
             percentsfull.append(None)
             moneyMissed.append(None)
+            opens.append(None)
+            closes.append(None)
             pass
         #driver.back()
 data = {
     'title' : titles,
     'Rating Runtime Genre': RRGs,
     'time': times,
-    'amenities' : amenitiesBig,
+    #'amenities' : amenitiesBig,
     'price' :prices,
-    'peopleInolved':  peopleInolved,
-    'IMDB rating': ratings,
-    'Earnings': earnings,
-    'Release Date': releaseDates,
+    #'peopleInolved':  peopleInolved,
+    #'IMDB rating': ratings,
+    #'Earnings': earnings,
+    #'Release Date': releaseDates,
     'percent full': percentsfull,
-    'Star Power' : starpowers,
-    'Popularity': popularities,
-    'MetaCritic Score': metascores,
-    'Time Taken': timesTaken
+    #'Star Power' : starpowers,
+    #'Popularity': popularities,
+   # 'MetaCritic Score': metascores,
+    'Time Taken': timesTaken,
+    'Money Missed' : moneyMissed,
+    'Open Seats' : opens,
+    'Taken Seats' : closes
 }
 df = pd.DataFrame(data)
 print df 
-df.to_csv("MovieProjectTest10-ChicagoFull.csv", encoding = 'utf-8')
+df.to_csv("Boston-MoneyMissed.csv", encoding = 'utf-8')
 
 
     
