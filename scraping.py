@@ -10,6 +10,15 @@ import time
 from selenium.webdriver.common.by import By
 import re
 from datetime import date
+import schedule
+from selenium import webdriver 
+from selenium.webdriver.chrome.options import Options
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import os
+import glob
+today = date.today()
+dateToday = today.strftime("%B %d, %Y")
 earnings = []
 peopleInolved=[]
 ratings = []
@@ -25,10 +34,18 @@ opens = []
 closes = []
 def imdbScrape(movie, showtimes):
     webdriver = "/Users/andydazzo/Desktop/chromedriver"
-    driver2 = Chrome(webdriver)
+    chrome_options = Options()
+    #chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-gpu")
+    #chrome_options.add_argument("--no-sandbox) # linux only
+    chrome_options.add_argument("--headless")
+    driver2 = Chrome(webdriver, options=chrome_options)
     movie = movie.replace("(2019)", " " )
+    movie = movie.replace("(2020)", " " )
     movie = movie.replace(" ", '+')
-    movie.replace(' & ',' and ' )
+    movie = movie.replace("&","and" )
+    if(movie == 'BIRDS+OF+PREY+(AND+THE+FANTABULOUS+EMANCIPATION+OF+ONE+HARLEY+QUINN)'):
+        movie = 'BIRDS+OF+PREY'
     print(movie)
     url = "https://www.imdb.com/find?q={}&ref_=nv_sr_sm".format(movie)
     driver2.get(url)
@@ -45,6 +62,7 @@ def imdbScrape(movie, showtimes):
     .key_up(Keys.COMMAND) \
     .perform()
     driver2.switch_to.window(driver2.window_handles[1])
+    time.sleep(10)
     rating = driver2.find_element_by_class_name('ratingValue')
     imdbRating = rating.find_element_by_tag_name('span')
     for s in showtimes:
@@ -114,11 +132,11 @@ def imdbScrape(movie, showtimes):
     CastList = driver2.find_element_by_class_name('cast_list')
     people = CastList.find_elements_by_class_name('primary_photo')
     StarPower = 0
-    for i in range(5):
+    for i in range(9):
         link = people[i]
         link1 = link.find_element_by_tag_name('a').get_attribute('href')
         webdriver = "/Users/andydazzo/Desktop/chromedriver"
-        driver5 = Chrome(webdriver)
+        driver5 = Chrome(webdriver,options=chrome_options)
         driver5.get(link1)
         try:
             meter = driver5.find_element_by_id('meterHeaderBox')
@@ -144,123 +162,160 @@ def imdbScrape(movie, showtimes):
     
 
 #add path for local machine
-webdriver = "/Users/andydazzo/Desktop/chromedriver"
-driver = Chrome(webdriver)
-url = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
-driver.get(url)
-movies = driver.find_elements_by_class_name('fd-movie')
-times = []
-titles = []
-prices = []
-RRGs= []
-amenitiesBig = []
-timesTaken = []
-for i in range(9):
-    title = movies[i].find_element_by_class_name("dark")
-    print(title.text)
-    RatingRuntimeGenre = movies[i].find_element_by_class_name("fd-movie__rating-runtime")
-    print(RatingRuntimeGenre.text)
-    showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
-    #imdbScrape(title.text, showtimes)
-    count = 0
-    for s in showtimes:
-        count = count + 1
-        try:
-            t = time.localtime()
-            current_time = time.strftime("%H:%M:%S", t)
-            d = date.today()
-            datesTaken.append(d)
-            print(current_time)
-            timesTaken.append(current_time)
-            titles.append(title.text + str(count))
-            RRGs.append(RatingRuntimeGenre.text)
-            showtime = s.find_element_by_tag_name('a')
-            print(showtime.text)
-            times.append(showtime.text)
-            url = showtime.get_attribute('href')
-            driver3 = Chrome(webdriver)
-            driver3.get(url)
-            amenities = driver3.find_elements_by_class_name('amenityPopup')
-            amenities1 = " "
-            for a in amenities:
-                amenities1 += a.text + ", "
-                print(a.text)
-            amenitiesBig.append(amenities1)
-            price = driver3.find_element_by_class_name('pricePerTicket')
-            print(price.text)
-            prices.append(price.text)
-            select = Select(driver3.find_element_by_class_name('qtyDropDown'))
-            select.select_by_visible_text('1')
-            button = driver3.find_element_by_id('NewCustomerCheckoutButton')
-            button.click()
+def scraper():
+    chrome_options = Options()
+    #chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-gpu")
+    #chrome_options.add_argument("--no-sandbox) # linux only
+    chrome_options.add_argument("--headless")
+   # driver = webdriver.Chrome(options=chrome_options)
+    webdriver = "/Users/andydazzo/Desktop/chromedriver"
+    driver = Chrome(webdriver, options=chrome_options)
+    url = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
+    driver.get(url)
+    movies = driver.find_elements_by_class_name('fd-movie')
+    times = []
+    titles = []
+    prices = []
+    RRGs= []
+    amenitiesBig = []
+    timesTaken = []
+    for i in range(5):
+        title = movies[i].find_element_by_class_name("dark")
+        print(title.text)
+        RatingRuntimeGenre = movies[i].find_element_by_class_name("fd-movie__rating-runtime")
+        print(RatingRuntimeGenre.text)
+        showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
+        imdbScrape(title.text, showtimes)
+        count = 0
+        for s in showtimes:
+            count = count + 1
             try:
-                seats = driver3.find_element_by_id('frmSeatPicker')
-                #print(seats.get_attribute('innerHTML'))
-                x = seats.find_element_by_id('svg-Layer_1')
-                #driver.execute_script('arguments[0].click();', x)
-                y = x.get_attribute('innerHTML')
-                openSeats= []
-                openSeats = re.findall('availableSeat', y)
-                opens.append(len(openSeats))
-                closedSeats = re.findall('reservedSeat' , y)
-                closes.append(len(closedSeats))
-                totalSeats = len(openSeats) + len(closedSeats)
-                if(totalSeats == 0):
+                t = time.localtime()
+                current_time = time.strftime("%H:%M:%S", t)
+                d = date.today()
+                datesTaken.append(d)
+                print(current_time)
+                timesTaken.append(current_time)
+                titles.append(title.text + str(count))
+                RRGs.append(RatingRuntimeGenre.text)
+                showtime = s.find_element_by_tag_name('a')
+                print(showtime.text)
+                times.append(showtime.text)
+                url = showtime.get_attribute('href')
+                driver3 = Chrome(webdriver, options=chrome_options)
+                driver3.get(url)
+                amenities = driver3.find_elements_by_class_name('amenityPopup')
+                amenities1 = " "
+                for a in amenities:
+                    amenities1 += a.text + ", "
+                    print(a.text)
+                amenitiesBig.append(amenities1)
+                price = driver3.find_element_by_class_name('pricePerTicket')
+                print(price.text)
+                prices.append(price.text)
+                select = Select(driver3.find_element_by_class_name('qtyDropDown'))
+                select.select_by_visible_text('1')
+                button = driver3.find_element_by_id('NewCustomerCheckoutButton')
+                button.click()
+                try:
+                    seats = driver3.find_element_by_id('frmSeatPicker')
+                    #print(seats.get_attribute('innerHTML'))
+                    x = seats.find_element_by_id('svg-Layer_1')
+                    #driver.execute_script('arguments[0].click();', x)
+                    y = x.get_attribute('innerHTML')
+                    openSeats= []
+                    openSeats = re.findall('availableSeat', y)
+                    opens.append(len(openSeats))
+                    closedSeats = re.findall('reservedSeat' , y)
+                    closes.append(len(closedSeats))
+                    totalSeats = len(openSeats) + len(closedSeats)
+                    if(totalSeats == 0):
+                        percentsfull.append(0.0)
+                        moneyMissed.append(0.0)
+                    else:
+                        percentsfull.append(len(closedSeats) / totalSeats)
+                        price = prices[len(prices) -1]
+                        s = price.replace('$', '')
+                        s1 = float(s)
+                        moneyMissed.append(s1 * len(openSeats))
+                        print('money missed ' + str((s1 * len(openSeats))))
+                except:
                     percentsfull.append(0.0)
+                    opens.append(0.0)
+                    closes.append(0.0)
                     moneyMissed.append(0.0)
-                else:
-                    percentsfull.append(len(closedSeats) / totalSeats)
-                    price = prices[len(prices) -1]
-                    s = price.replace('$', '')
-                    s1 = float(s)
-                    moneyMissed.append(s1 * len(openSeats))
-                    print('money missed ' + str((s1 * len(openSeats))))
+                #print(len(closedSeats) / totalSeats)
+
+
+                driver3.close()
+            
+                
+                
             except:
-                percentsfull.append(0.0)
-                opens.append(0.0)
-                closes.append(0.0)
-                moneyMissed.append(0.0)
-            #print(len(closedSeats) / totalSeats)
+            # driver3.close()
+                times.append(None)
+                amenitiesBig.append(None)
+                prices.append(None)
+                percentsfull.append(None)
+                moneyMissed.append(None)
+                opens.append(None)
+                closes.append(None)
+                pass
+            #driver.back()
+    data = {
+        'title' : titles,
+        'Rating Runtime Genre': RRGs,
+        'time': times,
+        #'amenities' : amenitiesBig,
+        'price' :prices,
+        'peopleInolved':  peopleInolved,
+        'IMDB rating': ratings,
+        'Earnings': earnings,
+        'Release Date': releaseDates,
+        'percent full': percentsfull,
+        'Star Power' : starpowers,
+        'Popularity': popularities,
+        'MetaCritic Score': metascores,
+        'Time Taken': timesTaken,
+        'Money Missed' : moneyMissed,
+        'Open Seats' : opens,
+        'Taken Seats' : closes
+    }
+    try:
+        df = pd.DataFrame(data)
+        print df 
+        filename = "ProjectAutomationTest{}_{}.csv".format(dateToday, current_time)
+        df.to_csv(filename, encoding = 'utf-8')
+       
+        #automatically upload to google drive
+   
 
 
-            driver3.close()
-           
-            
-            
-        except:
-           # driver3.close()
-            times.append(None)
-            amenitiesBig.append(None)
-            prices.append(None)
-            percentsfull.append(None)
-            moneyMissed.append(None)
-            opens.append(None)
-            closes.append(None)
-            pass
-        #driver.back()
-data = {
-    'title' : titles,
-    'Rating Runtime Genre': RRGs,
-    'time': times,
-    #'amenities' : amenitiesBig,
-    'price' :prices,
-    #'peopleInolved':  peopleInolved,
-    #'IMDB rating': ratings,
-    #'Earnings': earnings,
-    #'Release Date': releaseDates,
-    'percent full': percentsfull,
-    #'Star Power' : starpowers,
-    #'Popularity': popularities,
-   # 'MetaCritic Score': metascores,
-    'Time Taken': timesTaken,
-    'Money Missed' : moneyMissed,
-    'Open Seats' : opens,
-    'Taken Seats' : closes
-}
-df = pd.DataFrame(data)
-print df 
-df.to_csv("Boston-MoneyMissed.csv", encoding = 'utf-8')
-
+    except:
+        print("csv failed")
+if __name__ == "__main__":
+    print("started")
+    scraper()
+    count1 = 0 
+    schedule.every(15).minutes.do(scraper)
+    while True:
+        schedule.run_pending()
+        earnings[:] = []
+        peopleInolved[:] =[]
+        ratings[:] = []
+        Productions[:] = []
+        releaseDates[:]  = []
+        percentsfull[:] = []
+        popularities[:] = []
+        metascores[:] = []
+        starpowers[:] = [] 
+        datesTaken[:] = []
+        moneyMissed[:] = []
+        opens[:] = []
+        closes[:] = []
+        
+       
 
     
         
