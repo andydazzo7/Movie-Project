@@ -13,10 +13,10 @@ from datetime import date
 import schedule
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-import os
-import glob
+#from pydrive.auth import GoogleAuth
+#from pydrive.drive import GoogleDrive
+#import os
+#import glob
 today = date.today()
 dateToday = today.strftime("%B %d, %Y")
 earnings = []
@@ -172,7 +172,7 @@ def imdbScrape(movie, showtimes):
 
     
 url1 = "https://www.fandango.com/amc-sunset-5-aacoz/theater-page"
-url2 = "https://www.fandango.com/amc-sunset-5-aacoz/theater-page"
+url2 = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
 #add path for local machine
 def scraper(url):
     chrome_options = Options()
@@ -181,8 +181,8 @@ def scraper(url):
     #chrome_options.add_argument("--no-sandbox) # linux only
     chrome_options.add_argument("--headless")
    # driver = webdriver.Chrome(options=chrome_options)
-    webdriver = "/Users/andydazzo/Desktop/chromedriver"
-    driver = Chrome(webdriver, options=chrome_options)
+    #webdriver = "/Users/andydazzo/Desktop/chromedriver"
+    driver = Chrome(options=chrome_options)
    
     #NYCurl = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
     driver.get(url)
@@ -219,7 +219,7 @@ def scraper(url):
                 print(showtime.text)
                 times.append(showtime.text)
                 url = showtime.get_attribute('href')
-                driver3 = Chrome(webdriver, options=chrome_options)
+                driver3 = Chrome(options=chrome_options)
                 driver3.get(url)
                 amenities = driver3.find_elements_by_class_name('amenityPopup')
                 amenities1 = " "
@@ -314,7 +314,7 @@ if __name__ == "__main__":
     print("started")
     scraper(url1)
     count1 = 0 
-    schedule.every(15).minutes.do(scraper.url2)
+    schedule.every(15).minutes.do(scraper, url2)
     schedule.every(15).minutes.do(scraper, url1)
     while True:
         schedule.run_pending()
