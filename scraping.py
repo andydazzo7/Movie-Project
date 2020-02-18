@@ -9,10 +9,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 import time
 from selenium.webdriver.common.by import By
 import re
-from datetime import date
+from datetime import date, datetime
 import schedule
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
+import pytz
 #from pydrive.auth import GoogleAuth
 #from pydrive.drive import GoogleDrive
 #import os
@@ -174,7 +175,7 @@ def imdbScrape(movie, showtimes):
 url1 = "https://www.fandango.com/amc-sunset-5-aacoz/theater-page"
 url2 = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
 #add path for local machine
-def scraper(url):
+def scraper(url, city):
     chrome_options = Options()
     #chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-gpu")
@@ -204,11 +205,19 @@ def scraper(url):
         showtimes = movies[i].find_elements_by_class_name("fd-movie__btn-list-item")
        # imdbScrape(title.text, showtimes)
         count = 0
+        if(city == "LA"):
+            tz = pytz.timezone('US/Pacific')
+        else:
+            tz = pytz.timezone('US/Eastern')
+        t = datetime.now(tz).time()
+        print(t)
         for s in showtimes:
             count = count + 1
             try:
-                t = time.localtime()
-                current_time = time.strftime("%H:%M:%S", t)
+               # t = time.localtime()
+               # current_time = time.strftime("%H:%M:%S", t)
+                tz = pytz.timezone('US/Eastern')
+                current_time = datetime.now(tz).time()
                 d = date.today()
                 datesTaken.append(d)
                 print(current_time)
@@ -301,7 +310,7 @@ def scraper(url):
     try:
         df = pd.DataFrame(data)
         print df 
-        filename = "ProjectAutomationTest{}_{}.csv".format(dateToday, current_time)
+        filename = "ProjectAutomationTest{}_{}_{}.csv".format(dateToday, current_time,city)
         df.to_csv(filename, encoding = 'utf-8')
        
         #automatically upload to google drive
@@ -312,10 +321,10 @@ def scraper(url):
         print("csv failed")
 if __name__ == "__main__":
     print("started")
-    scraper(url1)
+    scraper(url1,'LA')
     count1 = 0 
-    schedule.every(15).minutes.do(scraper, url2)
-    schedule.every(15).minutes.do(scraper, url1)
+    schedule.every(15).minutes.do(scraper, url2,'NYC')
+    schedule.every(15).minutes.do(scraper, url1,'LA')
     while True:
         schedule.run_pending()
         earnings[:] = []
