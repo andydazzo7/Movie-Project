@@ -216,7 +216,7 @@ def scraper(url, city):
             try:
                # t = time.localtime()
                # current_time = time.strftime("%H:%M:%S", t)
-                tz = pytz.timezone('US/Eastern')
+               # tz = pytz.timezone('US/Eastern')
                 current_time = datetime.now(tz).time()
                 d = date.today()
                 datesTaken.append(d)
