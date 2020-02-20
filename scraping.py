@@ -19,7 +19,7 @@ import pytz
 #import os
 #import glob
 today = date.today()
-dateToday = today.strftime("%B %d, %Y")
+#dateToday = datetime.datetime.now(tz)
 earnings = []
 peopleInolved=[]
 ratings = []
@@ -176,6 +176,15 @@ url1 = "https://www.fandango.com/amc-sunset-5-aacoz/theater-page"
 url2 = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
 #add path for local machine
 def scraper(url, city):
+    if(city == "LA"):
+        tz = pytz.timezone('US/Pacific')
+    else:
+        tz = pytz.timezone('US/Eastern')
+    dateToday = datetime.now(tz).date()
+    dateToday = dateToday.strftime("%B %d, %Y")
+    #dateToday = dateToday.replace(tzinfo = tz)
+    #dateToday = dateToday.astimezone(tz)
+    print(dateToday)
     chrome_options = Options()
     #chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-gpu")
@@ -218,8 +227,8 @@ def scraper(url, city):
                # current_time = time.strftime("%H:%M:%S", t)
                # tz = pytz.timezone('US/Eastern')
                 current_time = datetime.now(tz).time()
-                d = date.today()
-                datesTaken.append(d)
+                #d = datetime.datetime.now(pytz.timezone(tz))
+                #datesTaken.append(d)
                 print(current_time)
                 timesTaken.append(current_time)
                 titles.append(title.text + str(count))
