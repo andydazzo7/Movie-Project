@@ -1,1 +1,2 @@
 # Movie-Project
+This is a project using web scraping and AWS in order to get relevant data for predicting ticket sales for movie theaters. The project makes use of selenium, chromedriver, pandas, and pyDrive, as well as various modeling techniques.
