@@ -330,7 +330,7 @@ def scraper(url, city):
         print("csv failed")
 if __name__ == "__main__":
     print("started")
-    scraper(url1,'LA')
+    scraper(url2,'NYC')
     count1 = 0 
     schedule.every(15).minutes.do(scraper, url2,'NYC')
     schedule.every(15).minutes.do(scraper, url1,'LA')
