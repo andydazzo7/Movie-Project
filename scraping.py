@@ -332,8 +332,8 @@ if __name__ == "__main__":
     print("started")
     scraper(url2,'NYC')
     count1 = 0 
-    schedule.every(15).minutes.do(scraper, url2,'NYC')
-    schedule.every(15).minutes.do(scraper, url1,'LA')
+    schedule.every(45).minutes.do(scraper, url2,'NYC')
+    schedule.every(55).minutes.do(scraper, url1,'LA')
     while True:
         schedule.run_pending()
         earnings[:] = []
