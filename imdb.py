@@ -148,7 +148,6 @@ def imdbScrape(movie):
         starpowers.append(StarPower)
         driver2.switch_to_window(main_window)
     except:
-        #for s in showtimes: 
         starpowers.append(None)
         popularities.append(None)
         earnings.append(None)
@@ -161,10 +160,9 @@ def imdbScrape(movie):
 
 if __name__ == "__main__":
     print("started")
-    movies = ['STAR WARS THE RISE OF SKYWALKER', 'BRAHMS THE BOY II', 'EMMA', 'THE CALL OF THE WILD',
-    'DOWNHILL', 'FANTASY ISLAND', 'SONIC THE HEDGEHOG', 'THE PHOTOGRAPH', 'BIRDS OF PREY', 
-    'THE GENTLEMEN', '1917', 'LITTLE WOMEN', 'KNIVES OUT', 'PARASITE', 'BAD BOYS FOR LIFE',
-     ]
+    #put movies you want to add
+    movies = ['Hope Gap', 'Onward', 'Impractical Jokers the movie', 'The Lodge', 'The Assistant'
+    ,'Gretel and Hansel', 'Bloodshot', 'I Still Believe', 'Portrait of A Lady on Fire']
     for m in movies:
         imdbScrape(m)
     data = {
@@ -180,9 +178,10 @@ if __name__ == "__main__":
         df = pd.DataFrame(data)
         print df 
         filename = "IMDBMASTERMARCH.csv"
-        df.to_csv(filename, encoding = 'utf-8')
+        #appends to exisitng master file
+        df.to_csv(filename, mode = 'a', encoding = 'utf-8')
        
-        #automatically upload to google drive
+        #automatically upload to google drive, use driveUploader.py
    
 
 
