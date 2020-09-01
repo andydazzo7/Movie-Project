@@ -172,7 +172,7 @@ def imdbScrape(movie, showtimes):
     driver2.quit()
 
     
-url1 = "https://www.fandango.com/amc-sunset-5-aacoz/theater-page"
+url1 = "https://www.fandango.com/amc-dine-in-disney-springstm-24-aabnu/theater-page"
 url2 = "https://www.fandango.com/amc-lincoln-square-13-aabqi/theater-page"
 #add path for local machine
 def scraper(url, city):
@@ -330,10 +330,10 @@ def scraper(url, city):
         print("csv failed")
 if __name__ == "__main__":
     print("started")
-    scraper(url2,'NYC')
+    scraper(url1,'FL')
     count1 = 0 
-    schedule.every(45).minutes.do(scraper, url2,'NYC')
-    schedule.every(55).minutes.do(scraper, url1,'LA')
+   # schedule.every(45).minutes.do(scraper, url2,'NYC')
+    schedule.every(360).minutes.do(scraper, url1,'FL')
     while True:
         schedule.run_pending()
         earnings[:] = []
